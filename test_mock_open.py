@@ -26,10 +26,12 @@ from mock_open import mock_open
 
 class MockTest(unittest.TestCase):
     def test_open_same_mocked_file_twice(self):
-        with mock_open("test_file"):
-            with open("test_file"):
-                with open("test_file"):
-                    pass
+        with mock_open("test_file", "foo"):
+            with open("test_file") as a:
+                with open("test_file") as b:
+                    self.assertEqual(a.read(), b.read())
+                    a.seek(0)
+                    self.assertEqual("foo", a.read())
 
     def test_file_open_not_mocked(self):
         with self.assertRaises(AssertionError):
