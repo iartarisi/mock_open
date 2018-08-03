@@ -68,3 +68,9 @@ class MockTest(unittest.TestCase):
                         with open("file1") as mocked_file1:
                             with open("file2") as mocked_file2:
                                 self.assertEqual(mocked_file1.read(), mocked_file2.read())
+
+    def test_raise_exception(self):
+        """Test raising an exception on mocked open()"""
+        with self.assertRaises(PermissionError):
+            with mock_open("file", exception=PermissionError(13, "Permission denied")):
+                open("file")

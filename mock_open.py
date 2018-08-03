@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 
 # Copyright (c) 2013 Ionuț Arțăriși <ionut@artarisi.eu>
+#               2018 Benjamin Drung <benjamin.drung@profitbricks.com>
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -41,13 +42,16 @@ class NotMocked(Exception):
 
 
 @contextmanager
-def mock_open(filename, contents=None, complain=True):
+def mock_open(filename, contents=None, exception=None, complain=True):
     """Mock the open() builtin function on a specific filename
 
     Let execution pass through to open() on files different than
     :filename:. Return a StringIO with :contents: if the file was
     matched. If the :contents: parameter is not given or if it is None,
     a StringIO instance simulating an empty file is returned.
+
+    If :exception: is defined, this Exception will be raised when
+    open is called instead of returning the :contents:.
 
     If :complain: is True (default), will raise an AssertionError if
     :filename: was not opened in the enclosed block. A NotMocked
@@ -64,8 +68,11 @@ def mock_open(filename, contents=None, complain=True):
 
         """
         if args[0] == filename:
-            file_ = io.StringIO(contents)
-            file_.name = filename
+            if exception is None:
+                file_ = io.StringIO(contents)
+                file_.name = filename
+            else:
+                raise exception  # false positive; pylint: disable=raising-bad-type
         else:
             mocked_file.stop()
             file_ = open(*args)
