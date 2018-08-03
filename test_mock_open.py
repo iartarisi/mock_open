@@ -22,9 +22,23 @@
 
 """Test mock_open()"""
 
+import collections
 import unittest
 
-from mock_open import mock_open
+try:
+    from unittest import mock
+except ImportError:  # pragma: no cover
+    import mock
+
+from mock_open import NotMocked, mock_open
+
+
+class OrderedSet(collections.UserList):  # pylint: disable=too-many-ancestors
+    """set subclass that remembers the order entries were added"""
+    def add(self, element):
+        """Add given element to set"""
+        if element not in self.data:
+            self.data.append(element)
 
 
 class MockTest(unittest.TestCase):
@@ -38,8 +52,19 @@ class MockTest(unittest.TestCase):
                     first.seek(0)
                     self.assertEqual("foo", first.read())
 
-    def test_file_open_not_mocked(self):
+    def test_file_not_open_mocked(self):
         """Test not opening the mocked file"""
         with self.assertRaises(AssertionError):
             with mock_open("file"):
                 pass
+
+    @mock.patch("builtins.set", OrderedSet)
+    def test_file_open_not_mocked(self):
+        """Test opening a not mocked file"""
+        with self.assertRaises(NotMocked):
+            with mock_open("file1", "foo"):
+                with mock_open("file2", "foo"):
+                    with open(__file__):
+                        with open("file1") as mocked_file1:
+                            with open("file2") as mocked_file2:
+                                self.assertEqual(mocked_file1.read(), mocked_file2.read())
