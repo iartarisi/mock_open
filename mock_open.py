@@ -24,7 +24,7 @@
 """Helper function to mock the builtin open() function"""
 
 
-from contextlib import contextmanager
+import contextlib
 import io
 
 try:
@@ -41,7 +41,7 @@ class NotMocked(Exception):
         self.filename = filename
 
 
-@contextmanager
+@contextlib.contextmanager
 def mock_open(filename, contents=None, exception=None, complain=True):
     """Mock the open() builtin function on a specific filename
 
