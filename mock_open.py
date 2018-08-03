@@ -26,7 +26,10 @@
 from contextlib import contextmanager
 import io
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 
 class NotMocked(Exception):
