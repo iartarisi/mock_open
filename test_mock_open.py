@@ -20,20 +20,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Test mock_open()"""
+
 import unittest
 
 from mock_open import mock_open
 
+
 class MockTest(unittest.TestCase):
-    def test_open_same_mocked_file_twice(self):
+    """Test mock_open()"""
+    def test_open_same_file_twice(self):
+        """Test opening the same mocked file twice"""
         with mock_open("test_file", "foo"):
-            with open("test_file") as a:
-                with open("test_file") as b:
-                    self.assertEqual(a.read(), b.read())
-                    a.seek(0)
-                    self.assertEqual("foo", a.read())
+            with open("test_file") as first:
+                with open("test_file") as second:
+                    self.assertEqual(first.read(), second.read())
+                    first.seek(0)
+                    self.assertEqual("foo", first.read())
 
     def test_file_open_not_mocked(self):
+        """Test not opening the mocked file"""
         with self.assertRaises(AssertionError):
             with mock_open("file"):
                 pass

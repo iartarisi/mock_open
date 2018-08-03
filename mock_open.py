@@ -20,17 +20,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Helper function to mock the builtin open() function"""
+
 
 from contextlib import contextmanager
 import io
 
 import mock
 
+
 class NotMocked(Exception):
+    """Raised when a file was opened which was not mocked"""
     def __init__(self, filename):
         super(NotMocked, self).__init__(
             "The file %s was opened, but not mocked." % filename)
         self.filename = filename
+
 
 @contextmanager
 def mock_open(filename, contents=None, complain=True):
@@ -48,22 +53,29 @@ def mock_open(filename, contents=None, complain=True):
 
     """
     open_files = set()
+
     def mock_file(*args):
+        """Mocked open() function
+
+        Takes the same arguments as the open() function.
+
+        """
         if args[0] == filename:
-            f = io.StringIO(contents)
-            f.name = filename
+            file_ = io.StringIO(contents)
+            file_.name = filename
         else:
             mocked_file.stop()
-            f = open(*args)
+            file_ = open(*args)
             mocked_file.start()
-        open_files.add(f.name)
-        return f
+        open_files.add(file_.name)
+        return file_
+
     mocked_file = mock.patch('builtins.open', mock_file)
     mocked_file.start()
     try:
         yield
-    except NotMocked as e:
-        if e.filename != filename:
+    except NotMocked as error:
+        if error.filename != filename:
             raise
     mocked_file.stop()
     try:
