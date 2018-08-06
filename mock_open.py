@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 
 # Copyright (c) 2013 Ionuț Arțăriși <ionut@artarisi.eu>
+#               2018 Benjamin Drung <benjamin.drung@profitbricks.com>
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,26 +21,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""Helper function to mock the builtin open() function"""
 
-from contextlib import contextmanager
+
+import contextlib
 import io
 
-import mock
+try:
+    from unittest import mock
+except ImportError:  # pragma: no cover
+    import mock
+
 
 class NotMocked(Exception):
+    """Raised when a file was opened which was not mocked"""
     def __init__(self, filename):
         super(NotMocked, self).__init__(
             "The file %s was opened, but not mocked." % filename)
         self.filename = filename
 
-@contextmanager
-def mock_open(filename, contents=None, complain=True):
+
+@contextlib.contextmanager
+def mock_open(filename, contents=None, exception=None, complain=True):
     """Mock the open() builtin function on a specific filename
 
     Let execution pass through to open() on files different than
     :filename:. Return a StringIO with :contents: if the file was
     matched. If the :contents: parameter is not given or if it is None,
     a StringIO instance simulating an empty file is returned.
+
+    If :exception: is defined, this Exception will be raised when
+    open is called instead of returning the :contents:.
 
     If :complain: is True (default), will raise an AssertionError if
     :filename: was not opened in the enclosed block. A NotMocked
@@ -48,22 +60,32 @@ def mock_open(filename, contents=None, complain=True):
 
     """
     open_files = set()
+
     def mock_file(*args):
+        """Mocked open() function
+
+        Takes the same arguments as the open() function.
+
+        """
         if args[0] == filename:
-            f = io.StringIO(contents)
-            f.name = filename
+            if exception is None:
+                file_ = io.StringIO(contents)
+                file_.name = filename
+            else:
+                raise exception  # false positive; pylint: disable=raising-bad-type
         else:
             mocked_file.stop()
-            f = open(*args)
+            file_ = open(*args)
             mocked_file.start()
-        open_files.add(f.name)
-        return f
+        open_files.add(file_.name)
+        return file_
+
     mocked_file = mock.patch('builtins.open', mock_file)
     mocked_file.start()
     try:
         yield
-    except NotMocked as e:
-        if e.filename != filename:
+    except NotMocked as error:
+        if error.filename != filename:
             raise
     mocked_file.stop()
     try:
