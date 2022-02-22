@@ -36,8 +36,7 @@ except ImportError:  # pragma: no cover
 class NotMocked(Exception):
     """Raised when a file was opened which was not mocked"""
     def __init__(self, filename):
-        super(NotMocked, self).__init__(
-            "The file %s was opened, but not mocked." % filename)
+        super().__init__(f"The file {filename} was opened, but not mocked.")
         self.filename = filename
 
 
@@ -75,6 +74,7 @@ def mock_open(filename, contents=None, exception=None, complain=True):
                 raise exception  # false positive; pylint: disable=raising-bad-type
         else:
             mocked_file.stop()
+            # pylint: disable=consider-using-with,unspecified-encoding
             file_ = open(*args, **kwargs)
             mocked_file.start()
         open_files.add(file_.name)
@@ -90,9 +90,9 @@ def mock_open(filename, contents=None, exception=None, complain=True):
     mocked_file.stop()
     try:
         open_files.remove(filename)
-    except KeyError:
+    except KeyError as error:
         if complain:
-            raise AssertionError("The file %s was not opened." % filename)
+            raise AssertionError(f"The file {filename} was not opened.") from error
     for f_name in open_files:
         if complain:
             raise NotMocked(f_name)
