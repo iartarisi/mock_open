@@ -35,6 +35,7 @@ except ImportError:  # pragma: no cover
 
 class NotMocked(Exception):
     """Raised when a file was opened which was not mocked"""
+
     def __init__(self, filename):
         super().__init__(f"The file {filename} was opened, but not mocked.")
         self.filename = filename
@@ -80,7 +81,7 @@ def mock_open(filename, contents=None, exception=None, complain=True):
         open_files.add(file_.name)
         return file_
 
-    mocked_file = mock.patch('builtins.open', mock_file)
+    mocked_file = mock.patch("builtins.open", mock_file)
     mocked_file.start()
     try:
         yield
