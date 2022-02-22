@@ -61,7 +61,7 @@ def mock_open(filename, contents=None, exception=None, complain=True):
     """
     open_files = set()
 
-    def mock_file(*args):
+    def mock_file(*args, **kwargs):
         """Mocked open() function
 
         Takes the same arguments as the open() function.
@@ -75,7 +75,7 @@ def mock_open(filename, contents=None, exception=None, complain=True):
                 raise exception  # false positive; pylint: disable=raising-bad-type
         else:
             mocked_file.stop()
-            file_ = open(*args)
+            file_ = open(*args, **kwargs)
             mocked_file.start()
         open_files.add(file_.name)
         return file_

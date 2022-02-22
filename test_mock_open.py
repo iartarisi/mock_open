@@ -46,8 +46,8 @@ class MockTest(unittest.TestCase):
     def test_open_same_file_twice(self):
         """Test opening the same mocked file twice"""
         with mock_open("test_file", "foo"):
-            with open("test_file") as first:
-                with open("test_file") as second:
+            with open("test_file", encoding="utf-8") as first:
+                with open("test_file", encoding="utf-8") as second:
                     self.assertEqual(first.read(), second.read())
                     first.seek(0)
                     self.assertEqual("foo", first.read())
