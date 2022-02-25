@@ -1,7 +1,7 @@
 # The MIT License (MIT)
 
 # Copyright (c) 2013 Ionuț Arțăriși <ionut@artarisi.eu>
-#               2018 Benjamin Drung <benjamin.drung@profitbricks.com>
+#               2018-2022 Benjamin Drung <bdrung@posteo.de>
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,9 +35,9 @@ except ImportError:  # pragma: no cover
 
 class NotMocked(Exception):
     """Raised when a file was opened which was not mocked"""
+
     def __init__(self, filename):
-        super(NotMocked, self).__init__(
-            "The file %s was opened, but not mocked." % filename)
+        super().__init__(f"The file {filename} was opened, but not mocked.")
         self.filename = filename
 
 
@@ -61,7 +61,7 @@ def mock_open(filename, contents=None, exception=None, complain=True):
     """
     open_files = set()
 
-    def mock_file(*args):
+    def mock_file(*args, **kwargs):
         """Mocked open() function
 
         Takes the same arguments as the open() function.
@@ -75,12 +75,13 @@ def mock_open(filename, contents=None, exception=None, complain=True):
                 raise exception  # false positive; pylint: disable=raising-bad-type
         else:
             mocked_file.stop()
-            file_ = open(*args)
+            # pylint: disable=consider-using-with,unspecified-encoding
+            file_ = open(*args, **kwargs)
             mocked_file.start()
         open_files.add(file_.name)
         return file_
 
-    mocked_file = mock.patch('builtins.open', mock_file)
+    mocked_file = mock.patch("builtins.open", mock_file)
     mocked_file.start()
     try:
         yield
@@ -90,9 +91,9 @@ def mock_open(filename, contents=None, exception=None, complain=True):
     mocked_file.stop()
     try:
         open_files.remove(filename)
-    except KeyError:
+    except KeyError as error:
         if complain:
-            raise AssertionError("The file %s was not opened." % filename)
+            raise AssertionError(f"The file {filename} was not opened.") from error
     for f_name in open_files:
         if complain:
             raise NotMocked(f_name)
